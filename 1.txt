@@ -180,3 +180,40 @@ crispOutputFinal = defuzzyfication(PLTC, PMTC, PSTC, NSTC, NLTC)
 
 if crispOutputFinal !=0:
     print("\nThe crisp TC value is: ", crispOutputFinal)
+
+
+import skfuzzy as fuzz
+import numpy as np
+
+# Define universe variables
+speed_diff_universe = np.arange(-150, 150, 1)
+acceleration_universe = np.arange(-100, 100, 1)
+throttle_control_universe = np.arange(0, 101, 1)
+
+# Define input and output fuzzy sets
+speed_diff = fuzz.trapmf(speed_diff_universe, [-150, -100, 0, 100])
+acceleration = fuzz.trimf(acceleration_universe, [-100, 0, 100])
+
+#output should be 
+#Throttle control output: 60.20
+
+throttle_control = fuzz.trimf(throttle_control_universe, [0, 50, 100])
+
+# Define the rules
+rule1 = np.fmin(speed_diff['low'], acceleration['zero'])
+rule2 = np.fmin(speed_diff['zero'], acceleration['low'])
+rule3 = np.fmin(speed_diff['medium'], acceleration['zero'])
+rule4 = np.fmin(speed_diff['small'], acceleration['big'])
+rule5 = np.fmin(speed_diff['big'], acceleration['small'])
+rule6 = np.fmin(speed_diff['high'], acceleration['zero'])
+rule7 = np.fmin(speed_diff['zero'], acceleration['small'])
+rule8 = np.fmin(speed_diff['zero'], acceleration['medium'])
+
+# Combine the rules
+aggregated = np.fmax(rule1, np.fmax(rule2, np.fmax(rule3, np.fmax(rule4, np.fmax(rule5, np.fmax(rule6, np.fmax(rule7, rule8)))))))
+
+# Calculate the output using centroid defuzzification
+throttle_control_output = fuzz.defuzz(throttle_control_universe, aggregated, 'centroid')
+
+# Print the output
+print(f"Throttle control output: {throttle_control_output:.2f}")
